@@ -1,7 +1,8 @@
 import numpy as np
 from numpy import  r_, c_, mat
-from pylab import plot, show, xlabel, ylabel, legend, axis
+from pylab import plot, show, xlabel, ylabel, legend, axis, contour
 from scipy import optimize
+import sys
 
 def plotdata(x, y):  
     plot(x[y.flatten() == 1, 0], x[y.flatten() == 1, 1], "k+")
@@ -12,6 +13,7 @@ def mapfeature(x1, x2):
     m = x1.shape[0]
     
     out = np.ones(shape=(m,1))
+    print range(1,degree)
     for i in range(1,degree):
         for j in range(i+1):
             t = (x1 ** (i-j)) * (x2 ** j)
@@ -24,7 +26,7 @@ def sigmoid(x):
     return 1.0 / (1.0 + np.e ** (-1.0 * x))
 
 def costfunctionreg(theta, x, y, l):
-    m = y.size
+    m = x.shape[0]
     y.shape = (x.shape[0],1)
     j = 0
     theta = theta.reshape((x.shape[1],1))
@@ -32,7 +34,9 @@ def costfunctionreg(theta, x, y, l):
     th = theta[1:, 0]
     
     hypothesis = sigmoid(x.dot(theta))
-    j = 1.0 / m * (-y * np.log (hypothesis) - (1 - y) * np.log (1 - hypothesis)).sum() + l / 2 * m *(th.sum()) 
+    j = 1.0 / m * (-y * np.log (hypothesis) - (1 - y) * np.log (1 - hypothesis)).sum() 
+    j_reg = l / (2 * m) *(th ** 2).sum()
+    j += j_reg
     
     return j
 
@@ -52,7 +56,14 @@ def plotdecisionboundary(theta, x, y):
         z = np.zeros(shape=(len(u), len(v)))
         for i in range(len(u)):
             for j in range(len(v)):
-                z[i, j] = (mapfeature(u[i], v[j])) * theta
+                ut = u[i]
+                vt = v[j]
+                print type(ut)
+                print type(vt)
+                #z[i, j] = 
+                ## mapfeature returns somethin odd here.
+                print ((mapfeature(np.array([ut]), np.array([vt]))) * theta)
+                sys.exit(1)
  
         z = z.T
         contour(u, v, z)
@@ -82,10 +93,11 @@ if __name__ == '__main__':
     l = 1
     cost = costfunctionreg(initial_theta, x, y, l)
     print "Cost at initial theta (zeros): %f\n" % cost
-    options = {'full_output': True, 'maxiter': 400}
-    theta, cost, _, _, _ = optimize.fmin(lambda t:costfunctionreg(t, x, y, l), initial_theta, **options)
-    #print 'Cost at theta found by fminunc: %f' % cost
-    #print 'theta: %s' % theta
+    #options = {'full_output': True, 'maxiter': 400}
+    options = {'full_output': True}
+    theta, cost, _, _, _, _ = optimize.fmin_powell(lambda t:costfunctionreg(t, x, y, l), initial_theta, **options)
+    print 'Cost at theta found by fminunc: %f' % cost
+    print 'theta: %s' % theta
     
     plotdecisionboundary(theta, x, y)
-    show()
+    #show()
