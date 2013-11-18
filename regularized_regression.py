@@ -1,6 +1,6 @@
 import numpy as np
-from numpy import  r_, c_, mat
-from pylab import plot, show, xlabel, ylabel, legend, axis, contour
+from numpy import  r_, c_
+from pylab import plot, show, xlabel, ylabel, legend, axis, contour, title
 from scipy import optimize
 import sys
 
@@ -13,13 +13,11 @@ def mapfeature(x1, x2):
     m = x1.shape[0]
     
     out = np.ones(shape=(m,1))
-    print range(1,degree)
     for i in range(1,degree):
         for j in range(i+1):
             t = (x1 ** (i-j)) * (x2 ** j)
             t.shape = (m,1)
-            out = np.c_[out, t]
-            
+            out = np.c_[out, t] 
     return out            
 
 def sigmoid(x):
@@ -34,8 +32,8 @@ def costfunctionreg(theta, x, y, l):
     th = theta[1:, 0]
     
     hypothesis = sigmoid(x.dot(theta))
-    j = 1.0 / m * (-y * np.log (hypothesis) - (1 - y) * np.log (1 - hypothesis)).sum() 
-    j_reg = l / (2 * m) *(th ** 2).sum()
+    j = 1.0 / m * (-y * np.log (hypothesis) - (1 - y) * np.log (1 - hypothesis)).sum()
+    j_reg = l / (2 * m) * (th ** 2).sum()
     j += j_reg
     
     return j
@@ -53,24 +51,21 @@ def plotdecisionboundary(theta, x, y):
     else:
         u = np.linspace(-1, 1.5, 50)
         v = np.linspace(-1, 1.5, 50)
-        z = np.zeros(shape=(len(u), len(v)))
+        z = np.zeros((len(u), len(v)))
         for i in range(len(u)):
             for j in range(len(v)):
-                ut = u[i]
-                vt = v[j]
-                print type(ut)
-                print type(vt)
-                #z[i, j] = 
-                ## mapfeature returns somethin odd here.
-                print ((mapfeature(np.array([ut]), np.array([vt]))) * theta)
-                sys.exit(1)
+                theta = theta.reshape((x.shape[1],1))
+                z[i, j] = mapfeature(np.array([u[i]]), np.array([v[j]])).dot(theta)
  
         z = z.T
         contour(u, v, z)
-        title('lambda = %f' % l)
-        xlabel('Microchip Test 1')
-        ylabel('Microchip Test 2')
-        legend(['y = 1', 'y = 0', 'Decision boundary'])
+        
+def predict(theta, x):
+    v = sigmoid(x.dot(theta))
+    v.shape = (x.shape[0],1)
+    p = v >= 0.5
+    return p
+        
 
 if __name__ == '__main__':
     
@@ -82,7 +77,7 @@ if __name__ == '__main__':
     xlabel('Microchip Test 1')
     ylabel('Microchip Test 2')
     legend(['y = 1', 'y = 0'], loc='upper right')
-    #show()
+    show()
 
     #=========== Part 1: Regularized Logistic Regression ============
     #Add Polynomial Features
@@ -96,8 +91,16 @@ if __name__ == '__main__':
     #options = {'full_output': True, 'maxiter': 400}
     options = {'full_output': True}
     theta, cost, _, _, _, _ = optimize.fmin_powell(lambda t:costfunctionreg(t, x, y, l), initial_theta, **options)
-    print 'Cost at theta found by fminunc: %f' % cost
-    print 'theta: %s' % theta
+    print 'Cost at theta found by fmin_powell: %f' % cost
+    #print 'theta: %s' % theta
     
     plotdecisionboundary(theta, x, y)
-    #show()
+    title('lambda = %f' % l)
+    xlabel('Microchip Test 1')
+    ylabel('Microchip Test 2')
+    legend(['y = 1', 'y = 0', 'Decision boundary'])
+    show()
+    
+    p = predict(theta, x)
+    print "Train Accuracy: %f" % ((p == y).mean() * 100)
+    
