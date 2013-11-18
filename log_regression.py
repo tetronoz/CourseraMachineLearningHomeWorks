@@ -3,7 +3,6 @@ from numpy import  r_, c_
 from pylab import plot, show, xlabel, ylabel,legend, axis
 from math import exp
 from scipy import optimize
-import sys
 
 def plotData(x, y):
     pos = (y == 1).nonzero()[:1]
